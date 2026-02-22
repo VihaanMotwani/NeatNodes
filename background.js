@@ -1,34 +1,34 @@
 // NeatNodes- Background Service Worker
 
 const PATTERNS = [
-  { id: 'arrays-hashing', name: 'Arrays & Hashing', icon: '⊞', color: '#4FC3F7' },
-  { id: 'two-pointers', name: 'Two Pointers', icon: '⇄', color: '#81C784' },
-  { id: 'fast-slow-pointers', name: 'Fast & Slow Pointers', icon: '⏩', color: '#AED581' },
-  { id: 'sliding-window', name: 'Sliding Window', icon: '⧈', color: '#FFD54F' },
-  { id: 'stack', name: 'Stack', icon: '▤', color: '#FF8A65' },
-  { id: 'monotonic-stack', name: 'Monotonic Stack', icon: '▥', color: '#FF7043' },
-  { id: 'binary-search', name: 'Binary Search', icon: '⟁', color: '#BA68C8' },
-  { id: 'modified-binary-search', name: 'Modified Binary Search', icon: '⟐', color: '#AB47BC' },
-  { id: 'linked-list', name: 'Linked List', icon: '⟶', color: '#4DD0E1' },
-  { id: 'trees-bfs', name: 'Trees (BFS)', icon: '🌳', color: '#66BB6A' },
-  { id: 'trees-dfs', name: 'Trees (DFS)', icon: '🌲', color: '#43A047' },
-  { id: 'tries', name: 'Tries', icon: '⑂', color: '#26A69A' },
-  { id: 'heap', name: 'Heap / Priority Queue', icon: '△', color: '#EF5350' },
-  { id: 'two-heaps', name: 'Two Heaps', icon: '⧖', color: '#E53935' },
-  { id: 'top-k', name: 'Top K Elements', icon: '⊤', color: '#EC407A' },
-  { id: 'k-way-merge', name: 'K-way Merge', icon: '⥮', color: '#F06292' },
-  { id: 'backtracking', name: 'Backtracking', icon: '↩', color: '#7E57C2' },
-  { id: 'subsets', name: 'Subsets', icon: '⊂', color: '#9575CD' },
-  { id: 'graphs-bfs-dfs', name: 'Graphs (BFS/DFS)', icon: '◈', color: '#42A5F5' },
-  { id: 'advanced-graphs', name: 'Advanced Graphs', icon: '◇', color: '#1E88E5' },
-  { id: 'topological-sort', name: 'Topological Sort', icon: '⇣', color: '#5C6BC0' },
-  { id: 'union-find', name: 'Union Find', icon: '⊕', color: '#7986CB' },
-  { id: 'dp-1d', name: '1-D Dynamic Programming', icon: '→', color: '#FFA726' },
-  { id: 'dp-2d', name: '2-D Dynamic Programming', icon: '⊞', color: '#FF9800' },
-  { id: 'greedy', name: 'Greedy', icon: '✦', color: '#FFCA28' },
-  { id: 'intervals', name: 'Intervals / Merge Intervals', icon: '⟷', color: '#8D6E63' },
-  { id: 'math-geometry', name: 'Math & Geometry', icon: '∑', color: '#78909C' },
-  { id: 'bit-manipulation', name: 'Bit Manipulation', icon: '⊻', color: '#90A4AE' }
+  { id: 'arrays-hashing', name: 'Arrays & Hashing', icon: 'AH', color: '#5cc8e8' },
+  { id: 'two-pointers', name: 'Two Pointers', icon: '2P', color: '#7ace8a' },
+  { id: 'fast-slow-pointers', name: 'Fast & Slow Pointers', icon: 'FS', color: '#8ad4a0' },
+  { id: 'sliding-window', name: 'Sliding Window', icon: 'SW', color: '#e8c85c' },
+  { id: 'stack', name: 'Stack', icon: 'ST', color: '#e8986c' },
+  { id: 'monotonic-stack', name: 'Monotonic Stack', icon: 'MS', color: '#d88860' },
+  { id: 'binary-search', name: 'Binary Search', icon: 'BS', color: '#b888d8' },
+  { id: 'modified-binary-search', name: 'Modified Binary Search', icon: 'MB', color: '#a07cc8' },
+  { id: 'linked-list', name: 'Linked List', icon: 'LL', color: '#58c8c8' },
+  { id: 'trees-bfs', name: 'Trees (BFS)', icon: 'BF', color: '#78c888' },
+  { id: 'trees-dfs', name: 'Trees (DFS)', icon: 'DF', color: '#5aad6e' },
+  { id: 'tries', name: 'Tries', icon: 'TR', color: '#4cb8a8' },
+  { id: 'heap', name: 'Heap / Priority Queue', icon: 'HP', color: '#e87898' },
+  { id: 'two-heaps', name: 'Two Heaps', icon: '2H', color: '#d86888' },
+  { id: 'top-k', name: 'Top K Elements', icon: 'TK', color: '#d878a0' },
+  { id: 'k-way-merge', name: 'K-way Merge', icon: 'KM', color: '#c87898' },
+  { id: 'backtracking', name: 'Backtracking', icon: 'BT', color: '#9878c8' },
+  { id: 'subsets', name: 'Subsets', icon: 'SS', color: '#a890d0' },
+  { id: 'graphs-bfs-dfs', name: 'Graphs (BFS/DFS)', icon: 'GR', color: '#68a8d8' },
+  { id: 'advanced-graphs', name: 'Advanced Graphs', icon: 'AG', color: '#5898c8' },
+  { id: 'topological-sort', name: 'Topological Sort', icon: 'TS', color: '#7888c8' },
+  { id: 'union-find', name: 'Union Find', icon: 'UF', color: '#8898d0' },
+  { id: 'dp-1d', name: '1-D Dynamic Programming', icon: '1D', color: '#e8a848' },
+  { id: 'dp-2d', name: '2-D Dynamic Programming', icon: '2D', color: '#e89838' },
+  { id: 'greedy', name: 'Greedy', icon: 'GD', color: '#d8c048' },
+  { id: 'intervals', name: 'Intervals / Merge Intervals', icon: 'IV', color: '#c8a088' },
+  { id: 'math-geometry', name: 'Math & Geometry', icon: 'MG', color: '#90a8b8' },
+  { id: 'bit-manipulation', name: 'Bit Manipulation', icon: 'BM', color: '#a0b0b8' }
 ];
 
 const DATA_STRUCTURES = [
@@ -72,7 +72,7 @@ chrome.alarms.onAlarm.addListener((alarm) => {
     chrome.notifications.create('timer-done', {
       type: 'basic',
       iconUrl: 'icons/icon128.png',
-      title: 'NeatNodes — Time\'s Up!',
+      title: 'NeatNodes - Time\'s Up',
       message: 'Your problem timer has ended. How did it go?',
       priority: 2
     });
@@ -88,7 +88,7 @@ function checkDueReviews() {
       chrome.notifications.create('review-due', {
         type: 'basic',
         iconUrl: 'icons/icon128.png',
-        title: 'NeatNodes — Reviews Due',
+        title: 'NeatNodes - Reviews Due',
         message: `You have ${due.length} problem${due.length > 1 ? 's' : ''} due for review today!`,
         priority: 1
       });
