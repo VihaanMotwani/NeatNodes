@@ -5,6 +5,48 @@ let allProblems = [];
 let allReviews = [];
 let currentFilter = 'all';
 let searchQuery = '';
+let currentGraphMode = 'force'; // 'force' or 'grid'
+
+// ─── PATTERN EDGES (conceptual relationships) ──────────────────
+const PATTERN_EDGES = [
+  ['arrays-hashing', 'two-pointers'],
+  ['arrays-hashing', 'sliding-window'],
+  ['arrays-hashing', 'binary-search'],
+  ['two-pointers', 'fast-slow-pointers'],
+  ['two-pointers', 'linked-list'],
+  ['fast-slow-pointers', 'linked-list'],
+  ['stack', 'monotonic-stack'],
+  ['binary-search', 'modified-binary-search'],
+  ['trees-bfs', 'trees-dfs'],
+  ['trees-bfs', 'heap'],
+  ['trees-dfs', 'tries'],
+  ['trees-dfs', 'backtracking'],
+  ['heap', 'two-heaps'],
+  ['heap', 'top-k'],
+  ['top-k', 'k-way-merge'],
+  ['backtracking', 'subsets'],
+  ['graphs-bfs-dfs', 'advanced-graphs'],
+  ['graphs-bfs-dfs', 'topological-sort'],
+  ['graphs-bfs-dfs', 'union-find'],
+  ['dp-1d', 'dp-2d'],
+  ['dp-1d', 'greedy'],
+  ['greedy', 'intervals'],
+  ['math-geometry', 'bit-manipulation'],
+  ['sliding-window', 'two-pointers'],
+  ['trees-bfs', 'graphs-bfs-dfs'],
+];
+
+// ─── FORCE GRAPH STATE ──────────────────────────────────────────
+let graphNodes = [];   // { id, x, y, vx, vy, radius, pattern, problemCount, pinned }
+let graphEdges = [];   // { source: nodeIndex, target: nodeIndex }
+let canvas, ctx;
+let animFrameId = null;
+let hoveredNode = null;
+let draggedNode = null;
+let isPanning = false;
+let panStart = { x: 0, y: 0 };
+let camera = { x: 0, y: 0, zoom: 1 };
+let lastMouseCanvas = { x: 0, y: 0 };
 
 // ─── INIT ────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
@@ -13,6 +55,8 @@ document.addEventListener('DOMContentLoaded', () => {
   setupFilters();
   setupSearch();
   setupExportImport();
+  setupViewToggle();
+  setupForceGraph();
 
   // Handle hash navigation
   if (window.location.hash === '#reviews') {
@@ -39,6 +83,7 @@ function render() {
   renderGraph();
   renderReviews();
   renderStatsView();
+  buildGraphNodes();
 }
 
 // ─── TABS ────────────────────────────────────────────────────────
@@ -63,6 +108,7 @@ function setupFilters() {
       chip.classList.add('active');
       currentFilter = chip.dataset.filter;
       renderGraph();
+      updateNodeHighlights();
     });
   });
 }
@@ -75,6 +121,7 @@ function setupSearch() {
     timeout = setTimeout(() => {
       searchQuery = input.value.trim().toLowerCase();
       renderGraph();
+      updateNodeHighlights();
     }, 200);
   });
 }
@@ -214,7 +261,7 @@ function renderProblemItem(p) {
       </div>
       <div class="problem-actions">
         <div class="conf-dots">
-          ${[0,1,2,3].map(i => `<div class="conf-dot${i <= p.confidence ? ` filled ${confClass}` : ''}"></div>`).join('')}
+          ${[0, 1, 2, 3].map(i => `<div class="conf-dot${i <= p.confidence ? ` filled ${confClass}` : ''}"></div>`).join('')}
         </div>
         <button class="small-btn open-link-btn" data-url="${escapeHtml(p.url)}" title="Open problem">↗</button>
         <button class="small-btn danger delete-problem-btn" data-id="${p.id}" title="Delete">✕</button>
@@ -320,8 +367,8 @@ function renderReviews() {
   const today = new Date().toISOString().split('T')[0];
 
   const due = allReviews.filter(r => r.dueDate <= today && !r.completed);
-  const upcoming = allReviews.filter(r => r.dueDate > today && !r.completed).sort((a,b) => a.dueDate.localeCompare(b.dueDate));
-  const completed = allReviews.filter(r => r.completed).sort((a,b) => (b.completedDate || '').localeCompare(a.completedDate || ''));
+  const upcoming = allReviews.filter(r => r.dueDate > today && !r.completed).sort((a, b) => a.dueDate.localeCompare(b.dueDate));
+  const completed = allReviews.filter(r => r.completed).sort((a, b) => (b.completedDate || '').localeCompare(a.completedDate || ''));
 
   renderReviewList('reviewsDueToday', due, 'due');
   renderReviewList('reviewsUpcoming', upcoming.slice(0, 20), 'upcoming');
@@ -422,7 +469,7 @@ function renderDifficultyBreakdown() {
       <div class="breakdown-dot" style="background:${colors[diff]}"></div>
       <span class="breakdown-label">${diff}</span>
       <span class="breakdown-value" style="color:${colors[diff]}">${count}</span>
-      <span style="color:var(--text-faint);font-size:12px;width:40px;text-align:right">${Math.round(count/total*100)}%</span>
+      <span style="color:var(--text-faint);font-size:12px;width:40px;text-align:right">${Math.round(count / total * 100)}%</span>
     </div>
   `).join('');
 }
@@ -440,7 +487,7 @@ function renderConfidenceBreakdown() {
       <div class="breakdown-dot" style="background:${colors[i]}"></div>
       <span class="breakdown-label">${labels[i]}</span>
       <span class="breakdown-value" style="color:${colors[i]}">${count}</span>
-      <span style="color:var(--text-faint);font-size:12px;width:40px;text-align:right">${Math.round(count/total*100)}%</span>
+      <span style="color:var(--text-faint);font-size:12px;width:40px;text-align:right">${Math.round(count / total * 100)}%</span>
     </div>
   `).join('');
 }
@@ -458,13 +505,13 @@ function renderReviewCompliance() {
       <div class="breakdown-dot" style="background:var(--green)"></div>
       <span class="breakdown-label">Completed</span>
       <span class="breakdown-value" style="color:var(--green)">${completedOnTime.length}</span>
-      <span style="color:var(--text-faint);font-size:12px;width:40px;text-align:right">${Math.round(completedOnTime.length/total*100)}%</span>
+      <span style="color:var(--text-faint);font-size:12px;width:40px;text-align:right">${Math.round(completedOnTime.length / total * 100)}%</span>
     </div>
     <div class="breakdown-row">
       <div class="breakdown-dot" style="background:var(--red)"></div>
       <span class="breakdown-label">Overdue</span>
       <span class="breakdown-value" style="color:var(--red)">${overdue.length}</span>
-      <span style="color:var(--text-faint);font-size:12px;width:40px;text-align:right">${Math.round(overdue.length/total*100)}%</span>
+      <span style="color:var(--text-faint);font-size:12px;width:40px;text-align:right">${Math.round(overdue.length / total * 100)}%</span>
     </div>
   `;
 }
@@ -564,7 +611,501 @@ function setupExportImport() {
   });
 }
 
-// ─── HELPERS ────────────────────────────────────────────────────
+// ─── VIEW TOGGLE ────────────────────────────────────────────────
+function setupViewToggle() {
+  document.querySelectorAll('.view-mode-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.view-mode-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      currentGraphMode = btn.dataset.mode;
+
+      const canvasWrapper = document.getElementById('canvasWrapper');
+      const gridContainer = document.getElementById('graphContainer');
+
+      if (currentGraphMode === 'force') {
+        canvasWrapper.classList.remove('hidden');
+        gridContainer.classList.add('hidden');
+        resizeCanvas();
+        startSimulation();
+      } else {
+        canvasWrapper.classList.add('hidden');
+        gridContainer.classList.remove('hidden');
+        stopSimulation();
+      }
+    });
+  });
+}
+
+// ─── FORCE GRAPH SETUP ──────────────────────────────────────────
+function setupForceGraph() {
+  canvas = document.getElementById('graphCanvas');
+  ctx = canvas.getContext('2d');
+
+  resizeCanvas();
+  window.addEventListener('resize', resizeCanvas);
+
+  // Mouse events
+  canvas.addEventListener('mousedown', onCanvasMouseDown);
+  canvas.addEventListener('mousemove', onCanvasMouseMove);
+  canvas.addEventListener('mouseup', onCanvasMouseUp);
+  canvas.addEventListener('mouseleave', onCanvasMouseLeave);
+  canvas.addEventListener('wheel', onCanvasWheel, { passive: false });
+  canvas.addEventListener('dblclick', onCanvasDblClick);
+}
+
+function resizeCanvas() {
+  if (!canvas) return;
+  const wrapper = document.getElementById('canvasWrapper');
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = wrapper.clientWidth * dpr;
+  canvas.height = wrapper.clientHeight * dpr;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+}
+
+function buildGraphNodes() {
+  const idToIndex = {};
+  graphNodes = allPatterns.map((p, i) => {
+    idToIndex[p.id] = i;
+    const problemCount = allProblems.filter(pr => pr.pattern === p.id).length;
+    const existing = graphNodes.find(n => n.id === p.id);
+    return {
+      id: p.id,
+      x: existing ? existing.x : (canvas ? canvas.width / (2 * (window.devicePixelRatio || 1)) : 600) + (Math.random() - 0.5) * 400,
+      y: existing ? existing.y : (canvas ? canvas.height / (2 * (window.devicePixelRatio || 1)) : 400) + (Math.random() - 0.5) * 300,
+      vx: 0,
+      vy: 0,
+      radius: 18 + Math.log(problemCount + 1) * 6,
+      pattern: p,
+      problemCount,
+      pinned: false,
+      opacity: 1
+    };
+  });
+
+  graphEdges = [];
+  PATTERN_EDGES.forEach(([srcId, tgtId]) => {
+    const src = idToIndex[srcId];
+    const tgt = idToIndex[tgtId];
+    if (src !== undefined && tgt !== undefined) {
+      // Avoid duplicate edges
+      const exists = graphEdges.some(e =>
+        (e.source === src && e.target === tgt) || (e.source === tgt && e.target === src)
+      );
+      if (!exists) graphEdges.push({ source: src, target: tgt });
+    }
+  });
+
+  updateNodeHighlights();
+  if (currentGraphMode === 'force') startSimulation();
+}
+
+function updateNodeHighlights() {
+  graphNodes.forEach(node => {
+    let problems = allProblems.filter(p => p.pattern === node.id);
+
+    if (currentFilter !== 'all') {
+      problems = problems.filter(p => p.difficulty === currentFilter);
+    }
+    if (searchQuery) {
+      problems = problems.filter(p =>
+        p.title.toLowerCase().includes(searchQuery) ||
+        (p.notes && p.notes.toLowerCase().includes(searchQuery)) ||
+        (p.dataStructures && p.dataStructures.some(ds => ds.toLowerCase().includes(searchQuery)))
+      );
+    }
+
+    if (currentFilter === 'all' && !searchQuery) {
+      node.opacity = 1;
+    } else {
+      node.opacity = problems.length > 0 ? 1 : 0.15;
+    }
+  });
+}
+
+// ─── SIMULATION ─────────────────────────────────────────────────
+function startSimulation() {
+  if (animFrameId) return;
+  simulationTick();
+}
+
+function stopSimulation() {
+  if (animFrameId) {
+    cancelAnimationFrame(animFrameId);
+    animFrameId = null;
+  }
+}
+
+function simulationTick() {
+  physicsTick();
+  drawGraph();
+  animFrameId = requestAnimationFrame(simulationTick);
+}
+
+function physicsTick() {
+  const REPULSION = 8000;
+  const SPRING_K = 0.004;
+  const SPRING_REST = 160;
+  const CENTER_GRAVITY = 0.01;
+  const DAMPING = 0.85;
+
+  const wrapper = document.getElementById('canvasWrapper');
+  const cx = wrapper.clientWidth / 2;
+  const cy = wrapper.clientHeight / 2;
+
+  // Repulsion between all pairs
+  for (let i = 0; i < graphNodes.length; i++) {
+    for (let j = i + 1; j < graphNodes.length; j++) {
+      const a = graphNodes[i];
+      const b = graphNodes[j];
+      let dx = b.x - a.x;
+      let dy = b.y - a.y;
+      let dist = Math.sqrt(dx * dx + dy * dy) || 1;
+      let force = REPULSION / (dist * dist);
+      let fx = (dx / dist) * force;
+      let fy = (dy / dist) * force;
+      if (!a.pinned) { a.vx -= fx; a.vy -= fy; }
+      if (!b.pinned) { b.vx += fx; b.vy += fy; }
+    }
+  }
+
+  // Spring force along edges
+  graphEdges.forEach(edge => {
+    const a = graphNodes[edge.source];
+    const b = graphNodes[edge.target];
+    let dx = b.x - a.x;
+    let dy = b.y - a.y;
+    let dist = Math.sqrt(dx * dx + dy * dy) || 1;
+    let displacement = dist - SPRING_REST;
+    let force = SPRING_K * displacement;
+    let fx = (dx / dist) * force;
+    let fy = (dy / dist) * force;
+    if (!a.pinned) { a.vx += fx; a.vy += fy; }
+    if (!b.pinned) { b.vx -= fx; b.vy -= fy; }
+  });
+
+  // Center gravity
+  graphNodes.forEach(node => {
+    if (node.pinned) return;
+    node.vx += (cx - node.x) * CENTER_GRAVITY;
+    node.vy += (cy - node.y) * CENTER_GRAVITY;
+  });
+
+  // Apply velocity with damping
+  graphNodes.forEach(node => {
+    if (node.pinned) return;
+    node.vx *= DAMPING;
+    node.vy *= DAMPING;
+    node.x += node.vx;
+    node.y += node.vy;
+  });
+}
+
+// ─── DRAWING ────────────────────────────────────────────────────
+function drawGraph() {
+  if (!ctx || !canvas) return;
+  const wrapper = document.getElementById('canvasWrapper');
+  const w = wrapper.clientWidth;
+  const h = wrapper.clientHeight;
+
+  ctx.clearRect(0, 0, w, h);
+  ctx.save();
+  ctx.translate(camera.x, camera.y);
+  ctx.scale(camera.zoom, camera.zoom);
+
+  // Draw edges
+  graphEdges.forEach(edge => {
+    const a = graphNodes[edge.source];
+    const b = graphNodes[edge.target];
+    const edgeOpacity = Math.min(a.opacity, b.opacity);
+
+    ctx.beginPath();
+    // Slightly curved edges for visual interest
+    const midX = (a.x + b.x) / 2;
+    const midY = (a.y + b.y) / 2;
+    const dx = b.x - a.x;
+    const dy = b.y - a.y;
+    const offset = Math.min(Math.sqrt(dx * dx + dy * dy) * 0.1, 20);
+    const cpX = midX + (-dy / Math.sqrt(dx * dx + dy * dy + 1)) * offset;
+    const cpY = midY + (dx / Math.sqrt(dx * dx + dy * dy + 1)) * offset;
+
+    ctx.moveTo(a.x, a.y);
+    ctx.quadraticCurveTo(cpX, cpY, b.x, b.y);
+    ctx.strokeStyle = `rgba(58, 74, 94, ${0.5 * edgeOpacity})`;
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+  });
+
+  // Draw nodes
+  graphNodes.forEach((node, i) => {
+    const isHovered = hoveredNode === i;
+    const r = isHovered ? node.radius + 3 : node.radius;
+    const color = node.pattern.color;
+
+    ctx.globalAlpha = node.opacity;
+
+    // Node fill — solid circle with subtle ring
+    ctx.beginPath();
+    ctx.arc(node.x, node.y, r, 0, Math.PI * 2);
+    ctx.fillStyle = hexToRgba(color, 0.15);
+    ctx.fill();
+    ctx.strokeStyle = hexToRgba(color, isHovered ? 0.9 : 0.5);
+    ctx.lineWidth = isHovered ? 2.5 : 1.5;
+    ctx.stroke();
+
+    // Inner dot
+    ctx.beginPath();
+    ctx.arc(node.x, node.y, r * 0.35, 0, Math.PI * 2);
+    ctx.fillStyle = hexToRgba(color, 0.7);
+    ctx.fill();
+
+    // Pattern icon text
+    ctx.font = `${Math.round(r * 0.55)}px sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillStyle = color;
+    ctx.fillText(node.pattern.icon, node.x, node.y);
+
+    // Label below node
+    ctx.font = '500 11px "DM Sans", sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    ctx.fillStyle = isHovered ? '#e2e8f0' : `rgba(122,139,160,${node.opacity})`;
+    ctx.fillText(node.pattern.name, node.x, node.y + r + 6);
+
+    // Problem count badge
+    if (node.problemCount > 0) {
+      const badgeR = 9;
+      const bx = node.x + r * 0.7;
+      const by = node.y - r * 0.7;
+
+      ctx.beginPath();
+      ctx.arc(bx, by, badgeR, 0, Math.PI * 2);
+      ctx.fillStyle = color;
+      ctx.fill();
+
+      ctx.font = 'bold 9px "JetBrains Mono", monospace';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillStyle = '#0a0e14';
+      ctx.fillText(node.problemCount, bx, by);
+    }
+
+    ctx.globalAlpha = 1;
+  });
+
+  ctx.restore();
+}
+
+function hexToRgba(hex, alpha) {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  return `rgba(${r},${g},${b},${alpha})`;
+}
+
+// ─── MOUSE INTERACTIONS ─────────────────────────────────────────
+function screenToWorld(sx, sy) {
+  return {
+    x: (sx - camera.x) / camera.zoom,
+    y: (sy - camera.y) / camera.zoom
+  };
+}
+
+function findNodeAt(wx, wy) {
+  for (let i = graphNodes.length - 1; i >= 0; i--) {
+    const n = graphNodes[i];
+    const dx = n.x - wx;
+    const dy = n.y - wy;
+    if (dx * dx + dy * dy <= (n.radius + 4) * (n.radius + 4)) return i;
+  }
+  return -1;
+}
+
+function onCanvasMouseDown(e) {
+  const rect = canvas.getBoundingClientRect();
+  const sx = e.clientX - rect.left;
+  const sy = e.clientY - rect.top;
+  const { x, y } = screenToWorld(sx, sy);
+
+  const nodeIdx = findNodeAt(x, y);
+  if (nodeIdx >= 0) {
+    draggedNode = nodeIdx;
+    graphNodes[nodeIdx].pinned = true;
+    canvas.style.cursor = 'grabbing';
+  } else {
+    isPanning = true;
+    panStart = { x: e.clientX - camera.x, y: e.clientY - camera.y };
+    canvas.style.cursor = 'grabbing';
+  }
+}
+
+function onCanvasMouseMove(e) {
+  const rect = canvas.getBoundingClientRect();
+  const sx = e.clientX - rect.left;
+  const sy = e.clientY - rect.top;
+  lastMouseCanvas = { x: sx, y: sy };
+  const { x: wx, y: wy } = screenToWorld(sx, sy);
+
+  if (draggedNode !== null) {
+    graphNodes[draggedNode].x = wx;
+    graphNodes[draggedNode].y = wy;
+    return;
+  }
+
+  if (isPanning) {
+    camera.x = e.clientX - panStart.x;
+    camera.y = e.clientY - panStart.y;
+    hideTooltip();
+    return;
+  }
+
+  // Hover detection
+  const nodeIdx = findNodeAt(wx, wy);
+  if (nodeIdx >= 0) {
+    if (hoveredNode !== nodeIdx) {
+      hoveredNode = nodeIdx;
+      showTooltip(graphNodes[nodeIdx], sx, sy);
+    }
+    canvas.style.cursor = 'pointer';
+  } else {
+    if (hoveredNode !== null) {
+      hoveredNode = null;
+      hideTooltip();
+    }
+    canvas.style.cursor = 'grab';
+  }
+}
+
+function onCanvasMouseUp(e) {
+  if (draggedNode !== null) {
+    graphNodes[draggedNode].pinned = false;
+    draggedNode = null;
+  }
+
+  if (isPanning) {
+    isPanning = false;
+  }
+
+  // Check for click on node (not a drag)
+  const rect = canvas.getBoundingClientRect();
+  const { x, y } = screenToWorld(e.clientX - rect.left, e.clientY - rect.top);
+  const nodeIdx = findNodeAt(x, y);
+  canvas.style.cursor = nodeIdx >= 0 ? 'pointer' : 'grab';
+}
+
+function onCanvasMouseLeave() {
+  if (draggedNode !== null) {
+    graphNodes[draggedNode].pinned = false;
+    draggedNode = null;
+  }
+  isPanning = false;
+  hoveredNode = null;
+  hideTooltip();
+  canvas.style.cursor = 'grab';
+}
+
+function onCanvasWheel(e) {
+  e.preventDefault();
+  const rect = canvas.getBoundingClientRect();
+  const sx = e.clientX - rect.left;
+  const sy = e.clientY - rect.top;
+
+  const zoomFactor = e.deltaY < 0 ? 1.08 : 1 / 1.08;
+  const newZoom = Math.max(0.3, Math.min(3, camera.zoom * zoomFactor));
+
+  // Zoom toward cursor
+  camera.x = sx - (sx - camera.x) * (newZoom / camera.zoom);
+  camera.y = sy - (sy - camera.y) * (newZoom / camera.zoom);
+  camera.zoom = newZoom;
+}
+
+function onCanvasDblClick(e) {
+  const rect = canvas.getBoundingClientRect();
+  const { x, y } = screenToWorld(e.clientX - rect.left, e.clientY - rect.top);
+  const nodeIdx = findNodeAt(x, y);
+  if (nodeIdx >= 0) {
+    const node = graphNodes[nodeIdx];
+    // Expand pattern card in grid, or open sidebar with first problem
+    const problems = allProblems.filter(p => p.pattern === node.id);
+    if (problems.length > 0) {
+      openSidebar(problems[0].id);
+    } else {
+      // Switch to grid and expand the pattern card
+      switchGraphMode('grid');
+      setTimeout(() => {
+        const card = document.querySelector(`.pattern-card[data-pattern-id="${node.id}"]`);
+        if (card) {
+          card.classList.add('expanded');
+          card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }, 100);
+    }
+  }
+}
+
+function switchGraphMode(mode) {
+  currentGraphMode = mode;
+  document.querySelectorAll('.view-mode-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.mode === mode);
+  });
+  const canvasWrapper = document.getElementById('canvasWrapper');
+  const gridContainer = document.getElementById('graphContainer');
+  if (mode === 'force') {
+    canvasWrapper.classList.remove('hidden');
+    gridContainer.classList.add('hidden');
+    resizeCanvas();
+    startSimulation();
+  } else {
+    canvasWrapper.classList.add('hidden');
+    gridContainer.classList.remove('hidden');
+    stopSimulation();
+  }
+}
+
+// ─── TOOLTIP ────────────────────────────────────────────────────
+function showTooltip(node, sx, sy) {
+  const tooltip = document.getElementById('graphTooltip');
+  const problems = allProblems.filter(p => p.pattern === node.id);
+  const maxShow = 5;
+
+  let problemsHtml = '';
+  if (problems.length > 0) {
+    const sliced = problems.slice(0, maxShow);
+    problemsHtml = `<div class="tt-problems">${sliced.map(p =>
+      `<div class="tt-problem"><span class="diff-badge ${p.difficulty.toLowerCase()}" style="font-size:9px;padding:1px 4px;margin-right:4px">${p.difficulty.charAt(0)}</span>${escapeHtml(p.title)}</div>`
+    ).join('')}${problems.length > maxShow ? `<div class="tt-problem" style="color:var(--text-faint)">+${problems.length - maxShow} more…</div>` : ''}</div>`;
+  }
+
+  tooltip.innerHTML = `
+    <div class="tt-name" style="color:${node.pattern.color}">
+      <span>${node.pattern.icon}</span>
+      <span>${node.pattern.name}</span>
+    </div>
+    <div class="tt-count">${node.problemCount} problem${node.problemCount !== 1 ? 's' : ''} tracked</div>
+    ${problemsHtml}
+  `;
+
+  // Position tooltip
+  const wrapper = document.getElementById('canvasWrapper');
+  const wRect = wrapper.getBoundingClientRect();
+  let tx = sx + 16;
+  let ty = sy - 10;
+
+  // Keep tooltip within bounds
+  if (tx + 260 > wRect.width) tx = sx - 270;
+  if (ty + tooltip.offsetHeight > wRect.height) ty = wRect.height - tooltip.offsetHeight - 10;
+  if (ty < 10) ty = 10;
+
+  tooltip.style.left = tx + 'px';
+  tooltip.style.top = ty + 'px';
+  tooltip.classList.add('visible');
+}
+
+function hideTooltip() {
+  document.getElementById('graphTooltip').classList.remove('visible');
+}
+
+
 function escapeHtml(str) {
   if (!str) return '';
   const div = document.createElement('div');

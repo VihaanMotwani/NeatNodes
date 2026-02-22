@@ -37,7 +37,7 @@
 
   <!-- GRAPH VIEW -->
   <main class="view active" id="graphView">
-    <div class="graph-container" id="graphContainer">
+    <div class="graph-controls-bar">
       <div class="graph-controls">
         <input type="text" class="search-input" id="graphSearch" placeholder="Search problems…">
         <div class="filter-chips" id="filterChips">
@@ -47,6 +47,26 @@
           <button class="filter-chip" data-filter="Hard">Hard</button>
         </div>
       </div>
+      <div class="view-mode-toggle" id="viewModeToggle">
+        <button class="view-mode-btn active" data-mode="force" title="Graph View">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="5" cy="5" r="2.5"/><circle cx="19" cy="5" r="2.5"/><circle cx="12" cy="19" r="2.5"/><line x1="7" y1="6" x2="17" y2="6"/><line x1="6.5" y1="7" x2="10.5" y2="17"/><line x1="17.5" y1="7" x2="13.5" y2="17"/></svg>
+          Graph
+        </button>
+        <button class="view-mode-btn" data-mode="grid" title="Grid View">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+          Grid
+        </button>
+      </div>
+    </div>
+
+    <!-- Force-directed graph canvas -->
+    <div class="canvas-wrapper" id="canvasWrapper">
+      <canvas id="graphCanvas"></canvas>
+      <div class="graph-tooltip" id="graphTooltip"></div>
+    </div>
+
+    <!-- Grid view (hidden by default) -->
+    <div class="graph-container hidden" id="graphContainer">
       <div class="pattern-grid" id="patternGrid"></div>
     </div>
 
