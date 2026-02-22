@@ -3,15 +3,15 @@
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
 :root {
-  --base: #1e2028;
-  --surface: #262830;
-  --raised: #2e3038;
-  --elevated: #363840;
-  --stroke: #363840;
-  --stroke-hover: #484a54;
-  --text-1: #e0e0e6;
-  --text-2: #9a9ca6;
-  --text-3: #6c6e78;
+  --base: #121318;
+  --surface: #1a1c23;
+  --raised: #22242d;
+  --elevated: #2a2d38;
+  --stroke: #343746;
+  --stroke-hover: #4a4e60;
+  --text-1: #f4f4f8;
+  --text-2: #b5b8c4;
+  --text-3: #868a9b;
   --accent: #e8e8ee;
   --accent-dim: rgba(232,232,238,0.05);
   --easy: #5cc8a0;
