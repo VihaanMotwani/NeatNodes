@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NeatNodes — Dashboard</title>
+  <link rel="stylesheet" href="dashboard.css">
+</head>
+<body>
+  <header class="top-bar">
+    <div class="top-bar-left">
+      <h1 class="logo">NeatNodes</h1>
+      <nav class="tabs">
+        <button class="tab active" data-view="graph">Graph</button>
+        <button class="tab" data-view="reviews">Reviews</button>
+        <button class="tab" data-view="stats">Stats</button>
+      </nav>
+    </div>
+    <div class="top-bar-right">
+      <div class="stat-pill">
+        <span class="stat-label">Problems</span>
+        <span class="stat-value" id="totalProblems">0</span>
+      </div>
+      <div class="stat-pill accent">
+        <span class="stat-label">Due Today</span>
+        <span class="stat-value" id="dueToday">0</span>
+      </div>
+      <div class="stat-pill green">
+        <span class="stat-label">Streak</span>
+        <span class="stat-value" id="streakCount">0</span>
+      </div>
+      <button class="action-btn" id="exportBtn" title="Export Data">↓ Export</button>
+      <button class="action-btn" id="importBtn" title="Import Data">↑ Import</button>
+      <input type="file" id="importFile" accept=".json" style="display:none">
+    </div>
+  </header>
+
+  <!-- GRAPH VIEW -->
+  <main class="view active" id="graphView">
+    <div class="graph-container" id="graphContainer">
+      <div class="graph-controls">
+        <input type="text" class="search-input" id="graphSearch" placeholder="Search problems…">
+        <div class="filter-chips" id="filterChips">
+          <button class="filter-chip active" data-filter="all">All</button>
+          <button class="filter-chip" data-filter="Easy">Easy</button>
+          <button class="filter-chip" data-filter="Medium">Medium</button>
+          <button class="filter-chip" data-filter="Hard">Hard</button>
+        </div>
+      </div>
+      <div class="pattern-grid" id="patternGrid"></div>
+    </div>
+
+    <!-- Problem Detail Sidebar -->
+    <div class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <h3 id="sidebarTitle">Problem</h3>
+        <button class="close-btn" id="closeSidebar">✕</button>
+      </div>
+      <div class="sidebar-content" id="sidebarContent"></div>
+    </div>
+  </main>
+
+  <!-- REVIEWS VIEW -->
+  <main class="view" id="reviewsView">
+    <div class="reviews-container">
+      <div class="reviews-section">
+        <h2 class="section-heading">Due Today</h2>
+        <div class="review-list" id="reviewsDueToday"></div>
+      </div>
+      <div class="reviews-section">
+        <h2 class="section-heading">Upcoming</h2>
+        <div class="review-list" id="reviewsUpcoming"></div>
+      </div>
+      <div class="reviews-section">
+        <h2 class="section-heading">Completed</h2>
+        <div class="review-list" id="reviewsCompleted"></div>
+      </div>
+    </div>
+  </main>
+
+  <!-- STATS VIEW -->
+  <main class="view" id="statsView">
+    <div class="stats-container">
+      <div class="stats-grid">
+        <div class="stats-card big">
+          <div class="stats-card-title">Pattern Coverage</div>
+          <div class="stats-card-body" id="patternCoverage"></div>
+        </div>
+        <div class="stats-card">
+          <div class="stats-card-title">Difficulty Breakdown</div>
+          <div class="stats-card-body" id="difficultyBreakdown"></div>
+        </div>
+        <div class="stats-card">
+          <div class="stats-card-title">Confidence Distribution</div>
+          <div class="stats-card-body" id="confidenceBreakdown"></div>
+        </div>
+        <div class="stats-card">
+          <div class="stats-card-title">Review Compliance</div>
+          <div class="stats-card-body" id="reviewCompliance"></div>
+        </div>
+        <div class="stats-card">
+          <div class="stats-card-title">Activity Heatmap</div>
+          <div class="stats-card-body" id="activityHeatmap"></div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script src="dashboard.js"></script>
+</body>
+</html>

@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=DM+Sans:wght@400;500;600;700&display=swap');
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --surface2: #1c2333;
+      --border: #30363d;
+      --text: #e6edf3;
+      --text-dim: #8b949e;
+      --accent: #58a6ff;
+      --green: #3fb950;
+      --yellow: #d29922;
+      --red: #f85149;
+      --orange: #db6d28;
+      --purple: #bc8cff;
+    }
+
+    body {
+      width: 380px;
+      max-height: 560px;
+      overflow-y: auto;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+    }
+
+    body::-webkit-scrollbar { width: 6px; }
+    body::-webkit-scrollbar-track { background: var(--bg); }
+    body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 16px 10px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .logo {
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 700;
+      font-size: 15px;
+      color: var(--accent);
+      letter-spacing: -0.5px;
+    }
+    .logo span { color: var(--text-dim); font-weight: 400; }
+
+    .header-actions { display: flex; gap: 8px; }
+
+    .icon-btn {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text-dim);
+      width: 30px;
+      height: 30px;
+      border-radius: 6px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      transition: all 0.15s;
+    }
+    .icon-btn:hover { background: var(--surface2); color: var(--text); }
+
+    .review-banner {
+      padding: 10px 16px;
+      background: linear-gradient(135deg, rgba(88,166,255,0.08), rgba(188,140,255,0.08));
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .review-banner:hover { background: linear-gradient(135deg, rgba(88,166,255,0.14), rgba(188,140,255,0.14)); }
+    .review-banner .count {
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 700;
+      font-size: 18px;
+      color: var(--accent);
+    }
+    .review-banner .label { color: var(--text-dim); font-size: 12px; }
+    .review-banner .arrow { color: var(--text-dim); font-size: 16px; }
+
+    .section {
+      padding: 12px 16px;
+    }
+
+    .section-title {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      color: var(--text-dim);
+      margin-bottom: 10px;
+    }
+
+    .detected-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: rgba(63,185,80,0.12);
+      color: var(--green);
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-size: 10px;
+      font-family: 'JetBrains Mono', monospace;
+      margin-bottom: 10px;
+    }
+    .detected-badge::before { content: '●'; font-size: 6px; }
+
+    input[type="text"], input[type="url"] {
+      width: 100%;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 8px 10px;
+      border-radius: 6px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    input:focus { border-color: var(--accent); }
+
+    .field { margin-bottom: 10px; }
+    .field label {
+      display: block;
+      font-size: 11px;
+      color: var(--text-dim);
+      margin-bottom: 4px;
+      font-weight: 500;
+    }
+
+    .chip-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .chip {
+      padding: 5px 10px;
+      border-radius: 6px;
+      font-size: 12px;
+      cursor: pointer;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text-dim);
+      transition: all 0.15s;
+      font-family: 'DM Sans', sans-serif;
+    }
+    .chip:hover { border-color: var(--accent); color: var(--text); }
+    .chip.active { border-color: var(--accent); background: rgba(88,166,255,0.12); color: var(--accent); }
+
+    .chip.diff-easy.active { border-color: var(--green); background: rgba(63,185,80,0.12); color: var(--green); }
+    .chip.diff-medium.active { border-color: var(--yellow); background: rgba(210,153,34,0.12); color: var(--yellow); }
+    .chip.diff-hard.active { border-color: var(--red); background: rgba(248,81,73,0.12); color: var(--red); }
+
+    .chip.conf-0.active { border-color: var(--red); background: rgba(248,81,73,0.1); color: var(--red); }
+    .chip.conf-1.active { border-color: var(--orange); background: rgba(219,109,40,0.1); color: var(--orange); }
+    .chip.conf-2.active { border-color: var(--yellow); background: rgba(210,153,34,0.1); color: var(--yellow); }
+    .chip.conf-3.active { border-color: var(--green); background: rgba(63,185,80,0.1); color: var(--green); }
+
+    .pattern-select {
+      width: 100%;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 8px 10px;
+      border-radius: 6px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      outline: none;
+      cursor: pointer;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238b949e' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 10px center;
+    }
+    .pattern-select:focus { border-color: var(--accent); }
+    .pattern-select option { background: var(--surface); color: var(--text); }
+
+    .ds-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+    }
+    .ds-tag {
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      cursor: pointer;
+      border: 1px solid transparent;
+      background: var(--surface2);
+      color: var(--text-dim);
+      transition: all 0.15s;
+    }
+    .ds-tag:hover { border-color: var(--border); }
+    .ds-tag.active { border-color: var(--purple); background: rgba(188,140,255,0.1); color: var(--purple); }
+
+    .notes-input {
+      width: 100%;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 8px 10px;
+      border-radius: 6px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 12px;
+      outline: none;
+      resize: vertical;
+      min-height: 48px;
+      max-height: 100px;
+    }
+    .notes-input:focus { border-color: var(--accent); }
+
+    /* Timer */
+    .timer-section {
+      padding: 10px 16px;
+      border-top: 1px solid var(--border);
+      background: var(--surface);
+    }
+
+    .timer-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .timer-display {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--text);
+      letter-spacing: 1px;
+    }
+    .timer-display.running { color: var(--green); }
+    .timer-display.danger { color: var(--red); }
+
+    .timer-controls { display: flex; gap: 6px; }
+
+    .timer-btn {
+      padding: 6px 14px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: var(--surface2);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.15s;
+      font-weight: 500;
+    }
+    .timer-btn:hover { border-color: var(--accent); }
+    .timer-btn.start { border-color: var(--green); color: var(--green); }
+    .timer-btn.start:hover { background: rgba(63,185,80,0.1); }
+    .timer-btn.stop { border-color: var(--red); color: var(--red); }
+    .timer-btn.stop:hover { background: rgba(248,81,73,0.1); }
+
+    .timer-label {
+      font-size: 10px;
+      color: var(--text-dim);
+      font-family: 'JetBrains Mono', monospace;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      margin-bottom: 4px;
+    }
+
+    /* Submit */
+    .submit-section {
+      padding: 12px 16px 14px;
+      border-top: 1px solid var(--border);
+    }
+
+    .submit-btn {
+      width: 100%;
+      padding: 10px;
+      border-radius: 8px;
+      border: none;
+      background: var(--accent);
+      color: #0d1117;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .submit-btn:hover { background: #79b8ff; }
+    .submit-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .submit-btn.success { background: var(--green); }
+
+    .msg {
+      text-align: center;
+      padding: 6px;
+      font-size: 12px;
+      border-radius: 4px;
+      margin-top: 6px;
+    }
+    .msg.error { background: rgba(248,81,73,0.1); color: var(--red); }
+    .msg.success { background: rgba(63,185,80,0.1); color: var(--green); }
+
+    .no-problem {
+      text-align: center;
+      padding: 24px 16px;
+      color: var(--text-dim);
+    }
+    .no-problem p { margin-bottom: 6px; }
+    .no-problem .hint {
+      font-size: 11px;
+      color: var(--text-dim);
+      opacity: 0.7;
+    }
+
+    .divider {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="logo">NeatNodes <span>v1.0</span></div>
+    <div class="header-actions">
+      <button class="icon-btn" id="dashboardBtn" title="Open Dashboard">⊞</button>
+    </div>
+  </div>
+
+  <div class="review-banner" id="reviewBanner">
+    <div>
+      <div class="count" id="reviewCount">0</div>
+      <div class="label">reviews due today</div>
+    </div>
+    <span class="arrow">→</span>
+  </div>
+
+  <div id="detectedBadge" style="display:none; padding: 12px 16px 0;">
+    <div class="detected-badge">AUTO-DETECTED</div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Add Problem</div>
+
+    <div class="field">
+      <label>Title</label>
+      <input type="text" id="titleInput" placeholder="Two Sum">
+    </div>
+
+    <div class="field">
+      <label>URL</label>
+      <input type="url" id="urlInput" placeholder="https://leetcode.com/problems/two-sum">
+    </div>
+
+    <div class="field">
+      <label>Pattern</label>
+      <select class="pattern-select" id="patternSelect">
+        <option value="">Select pattern…</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label>Difficulty</label>
+      <div class="chip-group" id="diffGroup">
+        <div class="chip diff-easy" data-value="Easy">Easy</div>
+        <div class="chip diff-medium active" data-value="Medium">Medium</div>
+        <div class="chip diff-hard" data-value="Hard">Hard</div>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Confidence</label>
+      <div class="chip-group" id="confGroup">
+        <div class="chip conf-0" data-value="0">Couldn't solve</div>
+        <div class="chip conf-1" data-value="1">Needed hints</div>
+        <div class="chip conf-2 active" data-value="2">With effort</div>
+        <div class="chip conf-3" data-value="3">Nailed it</div>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Data Structures</label>
+      <div class="ds-tags" id="dsTags"></div>
+    </div>
+
+    <div class="field">
+      <label>Notes (optional)</label>
+      <textarea class="notes-input" id="notesInput" placeholder="Key insight, approach used…"></textarea>
+    </div>
+  </div>
+
+  <div class="timer-section">
+    <div class="timer-label">Timer</div>
+    <div class="timer-row">
+      <div class="timer-display" id="timerDisplay">30:00</div>
+      <div class="timer-controls">
+        <button class="timer-btn start" id="timerStartBtn">Start</button>
+        <button class="timer-btn stop" id="timerStopBtn" style="display:none">Stop</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="submit-section">
+    <button class="submit-btn" id="submitBtn">Add to Graph</button>
+    <div id="submitMsg"></div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
