@@ -408,12 +408,19 @@ function renderReviewList(containerId, reviews, type) {
           </div>
         </div>
         <div class="review-card-actions">
-          <button class="review-btn" onclick="window.open('${escapeHtml(problem.url)}','_blank')">open</button>
+          <button class="review-btn open-review-btn" data-url="${escapeHtml(problem.url)}">open</button>
           ${!r.completed ? `<button class="review-btn complete" data-review-id="${r.id}">done</button>` : ''}
         </div>
       </div>
     `;
   }).join('');
+
+  // Attach open handlers
+  container.querySelectorAll('.open-review-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      window.open(btn.dataset.url, '_blank');
+    });
+  });
 
   // Attach complete handlers
   container.querySelectorAll('.review-btn.complete').forEach(btn => {
