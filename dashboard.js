@@ -178,34 +178,31 @@ function renderGraph() {
     card.style.animationDelay = `${idx * 0.02}s`;
     card.dataset.patternId = pattern.id;
 
+    card.style.setProperty('--card-accent', pattern.color);
     card.innerHTML = `
       <div class="pattern-header">
         <div class="pattern-info">
-          <div class="pattern-icon" style="background:${pattern.color}18; color:${pattern.color}">
-            ${pattern.icon}
-          </div>
+          <span class="pattern-icon" style="color:${pattern.color}">${pattern.icon}</span>
           <div>
             <div class="pattern-name">${pattern.name}</div>
             <div class="pattern-count">${allPatternProblems.length} problem${allPatternProblems.length !== 1 ? 's' : ''}</div>
           </div>
         </div>
-        <div style="display:flex;align-items:center;gap:8px;">
+        <div style="display:flex;align-items:center;gap:6px;">
           ${allPatternProblems.length > 0 ? `
-            <div class="pattern-badge" style="background:${pattern.color}18;color:${pattern.color}">
-              ${allPatternProblems.length}
-            </div>
+            <span class="pattern-badge" style="color:${pattern.color}">${allPatternProblems.length}</span>
           ` : ''}
-          <span class="expand-arrow">▸</span>
+          <span class="expand-arrow">></span>
         </div>
       </div>
       <div class="pattern-problems">
         ${problems.length === 0 && allPatternProblems.length > 0 ? `
-          <div style="padding:16px;text-align:center;color:var(--text-faint);font-size:12px;">
+          <div style="padding:16px;text-align:center;color:var(--text-3);font-size:12px;">
             No problems match current filter
           </div>
         ` : problems.length === 0 ? `
-          <div style="padding:16px;text-align:center;color:var(--text-faint);font-size:12px;">
-            No problems yet — add one from Leetcode!
+          <div style="padding:16px;text-align:center;color:var(--text-3);font-size:12px;">
+            No problems added yet
           </div>
         ` : ''}
         ${problems.map(p => renderProblemItem(p)).join('')}
@@ -263,8 +260,8 @@ function renderProblemItem(p) {
         <div class="conf-dots">
           ${[0, 1, 2, 3].map(i => `<div class="conf-dot${i <= p.confidence ? ` filled ${confClass}` : ''}"></div>`).join('')}
         </div>
-        <button class="small-btn open-link-btn" data-url="${escapeHtml(p.url)}" title="Open problem">↗</button>
-        <button class="small-btn danger delete-problem-btn" data-id="${p.id}" title="Delete">✕</button>
+        <button class="small-btn open-link-btn" data-url="${escapeHtml(p.url)}" title="Open problem">open</button>
+        <button class="small-btn danger delete-problem-btn" data-id="${p.id}" title="Delete">del</button>
       </div>
     </div>
   `;
@@ -291,7 +288,7 @@ function openSidebar(problemId) {
 
     <div class="sidebar-field">
       <div class="sidebar-field-label">Pattern</div>
-      <div class="sidebar-field-value" style="color:${pattern?.color || 'var(--text)'}">${pattern?.icon || ''} ${pattern?.name || problem.pattern}</div>
+      <div class="sidebar-field-value" style="color:${pattern?.color || 'var(--text-2)'}">${pattern?.name || problem.pattern}</div>
     </div>
 
     <div class="sidebar-field">
@@ -330,9 +327,9 @@ function openSidebar(problemId) {
       <div class="sidebar-reviews">
         ${reviews.map(r => `
           <div class="sidebar-review-item">
-            <span>Review #${r.reviewNumber} — ${formatDate(r.dueDate)}</span>
+            <span>Review #${r.reviewNumber} / ${formatDate(r.dueDate)}</span>
             <span class="review-status ${r.completed ? 'done' : r.dueDate <= today ? 'due' : 'pending'}">
-              ${r.completed ? '✓ Done' : r.dueDate <= today ? 'DUE' : 'Pending'}
+              ${r.completed ? 'done' : r.dueDate <= today ? 'due' : 'pending'}
             </span>
           </div>
         `).join('')}
@@ -380,14 +377,13 @@ function renderReviewList(containerId, reviews, type) {
 
   if (reviews.length === 0) {
     const msgs = {
-      due: { emoji: '✅', msg: 'All caught up! No reviews due.' },
-      upcoming: { emoji: '📅', msg: 'No upcoming reviews.' },
-      completed: { emoji: '📝', msg: 'No completed reviews yet.' }
+      due: 'No reviews due.',
+      upcoming: 'No upcoming reviews.',
+      completed: 'No completed reviews yet.'
     };
     container.innerHTML = `
       <div class="empty-state">
-        <div class="emoji">${msgs[type].emoji}</div>
-        <div class="msg">${msgs[type].msg}</div>
+        <div class="msg">${msgs[type]}</div>
       </div>
     `;
     return;
@@ -404,7 +400,7 @@ function renderReviewList(containerId, reviews, type) {
           <div>
             <div class="review-card-title">${escapeHtml(problem.title)}</div>
             <div class="review-card-meta">
-              <span style="color:${pattern?.color || 'var(--text-dim)'}">${pattern?.icon || ''} ${pattern?.name || ''}</span>
+              <span style="color:${pattern?.color || 'var(--text-3)'}">${pattern?.name || ''}</span>
               <span class="diff-badge ${problem.difficulty.toLowerCase()}">${problem.difficulty}</span>
               <span>Review #${r.reviewNumber}</span>
               <span>${formatDate(r.dueDate)}</span>
@@ -412,8 +408,8 @@ function renderReviewList(containerId, reviews, type) {
           </div>
         </div>
         <div class="review-card-actions">
-          <button class="review-btn" onclick="window.open('${escapeHtml(problem.url)}','_blank')">Open ↗</button>
-          ${!r.completed ? `<button class="review-btn complete" data-review-id="${r.id}">✓ Done</button>` : ''}
+          <button class="review-btn" onclick="window.open('${escapeHtml(problem.url)}','_blank')">open</button>
+          ${!r.completed ? `<button class="review-btn complete" data-review-id="${r.id}">done</button>` : ''}
         </div>
       </div>
     `;
@@ -447,7 +443,7 @@ function renderPatternCoverage() {
     const pct = (count / maxCount) * 100;
     return `
       <div class="coverage-bar-row">
-        <span class="coverage-bar-label" title="${pattern.name}">${pattern.icon} ${pattern.name}</span>
+        <span class="coverage-bar-label" title="${pattern.name}">${pattern.name}</span>
         <div class="coverage-bar-track">
           <div class="coverage-bar-fill" style="width:${pct}%;background:${pattern.color}"></div>
         </div>
@@ -463,13 +459,13 @@ function renderDifficultyBreakdown() {
   allProblems.forEach(p => { if (counts[p.difficulty] !== undefined) counts[p.difficulty]++; });
   const total = allProblems.length || 1;
 
-  const colors = { Easy: 'var(--green)', Medium: 'var(--yellow)', Hard: 'var(--red)' };
+  const colors = { Easy: 'var(--easy)', Medium: 'var(--medium)', Hard: 'var(--hard)' };
   container.innerHTML = Object.entries(counts).map(([diff, count]) => `
     <div class="breakdown-row">
       <div class="breakdown-dot" style="background:${colors[diff]}"></div>
       <span class="breakdown-label">${diff}</span>
       <span class="breakdown-value" style="color:${colors[diff]}">${count}</span>
-      <span style="color:var(--text-faint);font-size:12px;width:40px;text-align:right">${Math.round(count / total * 100)}%</span>
+      <span style="color:var(--text-3);font-size:12px;width:40px;text-align:right">${Math.round(count / total * 100)}%</span>
     </div>
   `).join('');
 }
@@ -477,7 +473,7 @@ function renderDifficultyBreakdown() {
 function renderConfidenceBreakdown() {
   const container = document.getElementById('confidenceBreakdown');
   const labels = ['Couldn\'t solve', 'Needed hints', 'Solved with effort', 'Nailed it'];
-  const colors = ['var(--red)', 'var(--orange)', 'var(--yellow)', 'var(--green)'];
+  const colors = ['var(--hard)', '#e8986c', 'var(--medium)', 'var(--easy)'];
   const counts = [0, 0, 0, 0];
   allProblems.forEach(p => { if (p.confidence >= 0 && p.confidence <= 3) counts[p.confidence]++; });
   const total = allProblems.length || 1;
@@ -487,7 +483,7 @@ function renderConfidenceBreakdown() {
       <div class="breakdown-dot" style="background:${colors[i]}"></div>
       <span class="breakdown-label">${labels[i]}</span>
       <span class="breakdown-value" style="color:${colors[i]}">${count}</span>
-      <span style="color:var(--text-faint);font-size:12px;width:40px;text-align:right">${Math.round(count / total * 100)}%</span>
+      <span style="color:var(--text-3);font-size:12px;width:40px;text-align:right">${Math.round(count / total * 100)}%</span>
     </div>
   `).join('');
 }
@@ -502,16 +498,16 @@ function renderReviewCompliance() {
 
   container.innerHTML = `
     <div class="breakdown-row">
-      <div class="breakdown-dot" style="background:var(--green)"></div>
+      <div class="breakdown-dot" style="background:var(--easy)"></div>
       <span class="breakdown-label">Completed</span>
-      <span class="breakdown-value" style="color:var(--green)">${completedOnTime.length}</span>
-      <span style="color:var(--text-faint);font-size:12px;width:40px;text-align:right">${Math.round(completedOnTime.length / total * 100)}%</span>
+      <span class="breakdown-value" style="color:var(--easy)">${completedOnTime.length}</span>
+      <span style="color:var(--text-3);font-size:12px;width:40px;text-align:right">${Math.round(completedOnTime.length / total * 100)}%</span>
     </div>
     <div class="breakdown-row">
-      <div class="breakdown-dot" style="background:var(--red)"></div>
+      <div class="breakdown-dot" style="background:var(--hard)"></div>
       <span class="breakdown-label">Overdue</span>
-      <span class="breakdown-value" style="color:var(--red)">${overdue.length}</span>
-      <span style="color:var(--text-faint);font-size:12px;width:40px;text-align:right">${Math.round(overdue.length / total * 100)}%</span>
+      <span class="breakdown-value" style="color:var(--hard)">${overdue.length}</span>
+      <span style="color:var(--text-3);font-size:12px;width:40px;text-align:right">${Math.round(overdue.length / total * 100)}%</span>
     </div>
   `;
 }
@@ -551,9 +547,9 @@ function renderHeatmap() {
   }
 
   container.innerHTML = `
-    <div style="margin-bottom:8px;font-size:11px;color:var(--text-faint)">Last 90 days</div>
+    <div style="margin-bottom:8px;font-size:11px;color:var(--text-3)">Last 90 days</div>
     <div class="heatmap-grid">${cells}</div>
-    <div style="display:flex;align-items:center;gap:4px;margin-top:8px;font-size:10px;color:var(--text-faint)">
+    <div style="display:flex;align-items:center;gap:4px;margin-top:8px;font-size:10px;color:var(--text-3)">
       <span>Less</span>
       <div class="heatmap-cell" style="width:10px;height:10px"></div>
       <div class="heatmap-cell l1" style="width:10px;height:10px"></div>
@@ -674,7 +670,7 @@ function buildGraphNodes() {
       y: existing ? existing.y : (canvas ? canvas.height / (2 * (window.devicePixelRatio || 1)) : 400) + (Math.random() - 0.5) * 300,
       vx: 0,
       vy: 0,
-      radius: 18 + Math.log(problemCount + 1) * 6,
+      radius: 24 + Math.log(problemCount + 1) * 8,
       pattern: p,
       problemCount,
       pinned: false,
@@ -812,83 +808,88 @@ function drawGraph() {
   ctx.translate(camera.x, camera.y);
   ctx.scale(camera.zoom, camera.zoom);
 
-  // Draw edges
+  // Draw edges — visible gray with arrowheads
   graphEdges.forEach(edge => {
     const a = graphNodes[edge.source];
     const b = graphNodes[edge.target];
     const edgeOpacity = Math.min(a.opacity, b.opacity);
 
-    ctx.beginPath();
-    // Slightly curved edges for visual interest
-    const midX = (a.x + b.x) / 2;
-    const midY = (a.y + b.y) / 2;
     const dx = b.x - a.x;
     const dy = b.y - a.y;
-    const offset = Math.min(Math.sqrt(dx * dx + dy * dy) * 0.1, 20);
-    const cpX = midX + (-dy / Math.sqrt(dx * dx + dy * dy + 1)) * offset;
-    const cpY = midY + (dx / Math.sqrt(dx * dx + dy * dy + 1)) * offset;
+    const dist = Math.sqrt(dx * dx + dy * dy) || 1;
 
-    ctx.moveTo(a.x, a.y);
-    ctx.quadraticCurveTo(cpX, cpY, b.x, b.y);
-    ctx.strokeStyle = `rgba(58, 74, 94, ${0.5 * edgeOpacity})`;
-    ctx.lineWidth = 1.5;
+    // Shorten edge to stop at node radius
+    const offsetA = a.radius;
+    const offsetB = b.radius;
+    const ax = a.x + (dx / dist) * offsetA;
+    const ay = a.y + (dy / dist) * offsetA;
+    const bx = b.x - (dx / dist) * offsetB;
+    const by = b.y - (dy / dist) * offsetB;
+
+    ctx.beginPath();
+    ctx.moveTo(ax, ay);
+    ctx.lineTo(bx, by);
+    ctx.strokeStyle = `rgba(120, 124, 136, ${0.4 * edgeOpacity})`;
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    // Arrowhead at target end
+    const arrowLen = 8;
+    const arrowAngle = Math.PI / 7;
+    const angle = Math.atan2(by - ay, bx - ax);
+    ctx.beginPath();
+    ctx.moveTo(bx, by);
+    ctx.lineTo(bx - arrowLen * Math.cos(angle - arrowAngle), by - arrowLen * Math.sin(angle - arrowAngle));
+    ctx.moveTo(bx, by);
+    ctx.lineTo(bx - arrowLen * Math.cos(angle + arrowAngle), by - arrowLen * Math.sin(angle + arrowAngle));
+    ctx.strokeStyle = `rgba(120, 124, 136, ${0.4 * edgeOpacity})`;
+    ctx.lineWidth = 1;
     ctx.stroke();
   });
 
-  // Draw nodes
+  // Draw nodes — solid filled circles with white text
   graphNodes.forEach((node, i) => {
     const isHovered = hoveredNode === i;
-    const r = isHovered ? node.radius + 3 : node.radius;
+    const r = isHovered ? node.radius + 4 : node.radius;
     const color = node.pattern.color;
 
     ctx.globalAlpha = node.opacity;
 
-    // Node fill — solid circle with subtle ring
+    // Hover glow
+    if (isHovered) {
+      ctx.save();
+      ctx.shadowColor = color;
+      ctx.shadowBlur = 16;
+    }
+
+    // Solid fill
     ctx.beginPath();
     ctx.arc(node.x, node.y, r, 0, Math.PI * 2);
-    ctx.fillStyle = hexToRgba(color, 0.15);
+    ctx.fillStyle = color;
     ctx.fill();
-    ctx.strokeStyle = hexToRgba(color, isHovered ? 0.9 : 0.5);
-    ctx.lineWidth = isHovered ? 2.5 : 1.5;
+
+    // Slightly darker stroke
+    ctx.strokeStyle = darkenHex(color, 0.25);
+    ctx.lineWidth = 2;
     ctx.stroke();
 
-    // Inner dot
-    ctx.beginPath();
-    ctx.arc(node.x, node.y, r * 0.35, 0, Math.PI * 2);
-    ctx.fillStyle = hexToRgba(color, 0.7);
-    ctx.fill();
+    if (isHovered) {
+      ctx.restore();
+    }
 
-    // Pattern icon text
-    ctx.font = `${Math.round(r * 0.55)}px sans-serif`;
+    // White abbreviation text inside
+    ctx.font = `bold ${Math.round(r * 0.5)}px "JetBrains Mono", monospace`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillStyle = color;
+    ctx.fillStyle = '#ffffff';
     ctx.fillText(node.pattern.icon, node.x, node.y);
 
     // Label below node
-    ctx.font = '500 11px "DM Sans", sans-serif';
+    ctx.font = '500 10px "Outfit", sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'top';
-    ctx.fillStyle = isHovered ? '#e2e8f0' : `rgba(122,139,160,${node.opacity})`;
-    ctx.fillText(node.pattern.name, node.x, node.y + r + 6);
-
-    // Problem count badge
-    if (node.problemCount > 0) {
-      const badgeR = 9;
-      const bx = node.x + r * 0.7;
-      const by = node.y - r * 0.7;
-
-      ctx.beginPath();
-      ctx.arc(bx, by, badgeR, 0, Math.PI * 2);
-      ctx.fillStyle = color;
-      ctx.fill();
-
-      ctx.font = 'bold 9px "JetBrains Mono", monospace';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillStyle = '#0a0e14';
-      ctx.fillText(node.problemCount, bx, by);
-    }
+    ctx.fillStyle = isHovered ? '#e0e0e6' : `rgba(138,140,150,${node.opacity})`;
+    ctx.fillText(node.pattern.name, node.x, node.y + r + 8);
 
     ctx.globalAlpha = 1;
   });
@@ -901,6 +902,13 @@ function hexToRgba(hex, alpha) {
   const g = parseInt(hex.slice(3, 5), 16);
   const b = parseInt(hex.slice(5, 7), 16);
   return `rgba(${r},${g},${b},${alpha})`;
+}
+
+function darkenHex(hex, amount) {
+  const r = Math.max(0, Math.round(parseInt(hex.slice(1, 3), 16) * (1 - amount)));
+  const g = Math.max(0, Math.round(parseInt(hex.slice(3, 5), 16) * (1 - amount)));
+  const b = Math.max(0, Math.round(parseInt(hex.slice(5, 7), 16) * (1 - amount)));
+  return `rgb(${r},${g},${b})`;
 }
 
 // ─── MOUSE INTERACTIONS ─────────────────────────────────────────
@@ -1073,12 +1081,11 @@ function showTooltip(node, sx, sy) {
     const sliced = problems.slice(0, maxShow);
     problemsHtml = `<div class="tt-problems">${sliced.map(p =>
       `<div class="tt-problem"><span class="diff-badge ${p.difficulty.toLowerCase()}" style="font-size:9px;padding:1px 4px;margin-right:4px">${p.difficulty.charAt(0)}</span>${escapeHtml(p.title)}</div>`
-    ).join('')}${problems.length > maxShow ? `<div class="tt-problem" style="color:var(--text-faint)">+${problems.length - maxShow} more…</div>` : ''}</div>`;
+    ).join('')}${problems.length > maxShow ? `<div class="tt-problem" style="color:var(--text-3)">+${problems.length - maxShow} more</div>` : ''}</div>`;
   }
 
   tooltip.innerHTML = `
     <div class="tt-name" style="color:${node.pattern.color}">
-      <span>${node.pattern.icon}</span>
       <span>${node.pattern.name}</span>
     </div>
     <div class="tt-count">${node.problemCount} problem${node.problemCount !== 1 ? 's' : ''} tracked</div>

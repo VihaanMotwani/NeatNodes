@@ -3,13 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>NeatNodes — Dashboard</title>
+  <title>neatnodes</title>
   <link rel="stylesheet" href="dashboard.css">
 </head>
 <body>
   <header class="top-bar">
     <div class="top-bar-left">
-      <h1 class="logo">NeatNodes</h1>
+      <h1 class="logo">neatnodes</h1>
       <nav class="tabs">
         <button class="tab active" data-view="graph">Graph</button>
         <button class="tab" data-view="reviews">Reviews</button>
@@ -29,8 +29,8 @@
         <span class="stat-label">Streak</span>
         <span class="stat-value" id="streakCount">0</span>
       </div>
-      <button class="action-btn" id="exportBtn" title="Export Data">↓ Export</button>
-      <button class="action-btn" id="importBtn" title="Import Data">↑ Import</button>
+      <button class="action-btn" id="exportBtn" title="Export Data">export</button>
+      <button class="action-btn" id="importBtn" title="Import Data">import</button>
       <input type="file" id="importFile" accept=".json" style="display:none">
     </div>
   </header>
@@ -39,7 +39,7 @@
   <main class="view active" id="graphView">
     <div class="graph-controls-bar">
       <div class="graph-controls">
-        <input type="text" class="search-input" id="graphSearch" placeholder="Search problems…">
+        <input type="text" class="search-input" id="graphSearch" placeholder="Search problems...">
         <div class="filter-chips" id="filterChips">
           <button class="filter-chip active" data-filter="all">All</button>
           <button class="filter-chip" data-filter="Easy">Easy</button>
@@ -48,14 +48,8 @@
         </div>
       </div>
       <div class="view-mode-toggle" id="viewModeToggle">
-        <button class="view-mode-btn active" data-mode="force" title="Graph View">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="5" cy="5" r="2.5"/><circle cx="19" cy="5" r="2.5"/><circle cx="12" cy="19" r="2.5"/><line x1="7" y1="6" x2="17" y2="6"/><line x1="6.5" y1="7" x2="10.5" y2="17"/><line x1="17.5" y1="7" x2="13.5" y2="17"/></svg>
-          Graph
-        </button>
-        <button class="view-mode-btn" data-mode="grid" title="Grid View">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
-          Grid
-        </button>
+        <button class="view-mode-btn active" data-mode="force" title="Graph View">graph</button>
+        <button class="view-mode-btn" data-mode="grid" title="Grid View">grid</button>
       </div>
     </div>
 
@@ -74,7 +68,7 @@
     <div class="sidebar" id="sidebar">
       <div class="sidebar-header">
         <h3 id="sidebarTitle">Problem</h3>
-        <button class="close-btn" id="closeSidebar">✕</button>
+        <button class="close-btn" id="closeSidebar">x</button>
       </div>
       <div class="sidebar-content" id="sidebarContent"></div>
     </div>
